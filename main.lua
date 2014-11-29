@@ -1,33 +1,49 @@
+-- global variables
+GLOBALS = { debug = false }
+local globals = GLOBALS
 
 -- main variables
 local
-  debug,
   fps,
   mspf
 
+local state
+
 -- LOAD --
 function love.load(arg)
-  debug = false
+  globals.debug = false
   
   love.graphics.setDefaultFilter("nearest","nearest")
   love.graphics.setBackgroundColor(0,100,150)
+  
+  state = require("game.game")
+  state.load()
 end
 
 -- KEYPRESSED --
 function love.keypressed(key)
   if (key == "kp+") then
-    debug = not debug
+    globals.debug = not globals.debug
+  elseif (key == "escape") then
+    love.event.quit()
   end
   
-  if (debug) then
-    print(key)
+  if state.keypressed then
+    state.keypressed(key)
+  end
+end
+
+function love.mousepressed( x, y, button )
+  if state.mousepressed then
+    state.mousepressed(x, y, button)
   end
 end
 
 -- UPDATE --
 function love.update(dt)
+  state.update(dt)
   
-  if (debug) then
+  if (globals.debug) then
     fps = love.timer.getFPS()
     mspf = math.floor(100000/fps)/100
   end
@@ -35,12 +51,19 @@ end
 
 -- DRAW --
 function love.draw()
-  -- draw stuff
-  if (debug) then
+  state.draw()
+  
+  if (globals.debug) then
     love.graphics.setColor(0,0,0,128)
     love.graphics.rectangle("fill",0,0,100,40)
     love.graphics.setColor(255,255,255)
     love.graphics.print("FPS:  "..fps, 5,5)
     love.graphics.print("msPF: "..mspf, 5,20)
+  end
+end
+
+function love.resize(w,h)
+  if state.resize then
+    state.resize(w,h)
   end
 end
