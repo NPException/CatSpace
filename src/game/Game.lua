@@ -87,7 +87,7 @@ function Game.mousepressed( x, y, button )
     local planet = getPlanetOnScreen(x, y)
     if planet then
       local Cat = require("game.entities.Cat")
-      table.insert(planet.entities, Cat.new(planet,0,5))
+      table.insert(planet.entities, Cat.new(planet,math.random()))
     end
   
   elseif (button == "wu") then
