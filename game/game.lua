@@ -1,161 +1,98 @@
-local game = {}
+local globals = GLOBALS
+local Game = {}
 
-local Planet = require("game.planet.Planet")
 
 local camera
 local camFocus
 
-local planets
+local WorldGen = require("game.worldgen.WorldGenerator")
+
+local universe
 local focusedPlanet
 
 local
-  shader,
-  canvas,
   time,
   config
 
-local function updateShader(w, h)
-  canvas = love.graphics.newCanvas(w,h)
-  canvas:setFilter("nearest","nearest")
-  
-  local str = love.filesystem.read('shaders/'..config.shadername..'.frag')
-  shader = love.graphics.newShader(str)
-  
-  if (shader) then
-    local inputSize = config.shadervars['inputSize']
-    if inputSize then
-      shader:send('inputSize', {w*inputSize, h*inputSize})
-    end
-    
-    local outputSize = config.shadervars['outputSize']
-    if outputSize then
-      shader:send('outputSize', {w*outputSize, h*outputSize})
-    end
-    
-    local textureSize = config.shadervars['textureSize']
-    if textureSize then
-      shader:send('textureSize', {w*textureSize, h*textureSize})
-    end
-  end
-end
-
-local function initPlanets()
-  planets = {
-    Planet.new()
-  }
-  
-  focusedPlanet = planets[1]
-  
-  local tooClose = function(planet)
-    local result = false
-    local minDist = 100.0
-    for _,p in ipairs(planets) do
-      if planet:surfaceDistance(p) < minDist then
-        result = true
-        break
-      end
-    end
-    return result
-  end
-  
-  for i=1,math.random(50,100) do
-    local newPlanet    
-    repeat
-      local x,y = math.random(-12800,12800), math.random(-7200,7200)
-      local radius = math.random(25,300)
-      newPlanet = Planet.new(x,y,radius)
-    until not tooClose(newPlanet)
-      
-    table.insert(planets, newPlanet)
-  end
-end
 
 local function updateCameraFocus(worldX, worldY, scale)
   camFocus.scale = math.min(scale,(720*23)/love.window.getHeight())
+  local minScale = (focusedPlanet.radius*2) / (love.window.getHeight()-100)
+  camFocus.scale = math.max(camFocus.scale, minScale)
   camFocus.x = (-love.window.getWidth()/2 ) * camFocus.scale + worldX
   camFocus.y = (-love.window.getHeight()/2 ) * camFocus.scale + worldY
   camFocus.done = false
 end
 
+
 --------------------
 -- INITIALIZATION --
 --------------------
-function game.load()
+function Game.load()  
+  universe = WorldGen.createUniverseFromSeed(globals.config.worldseed)
+  focusedPlanet = universe.planets[1]
+  
   -- init camera
   camera = require("camera.Camera").new()
   camFocus = require("camera.CameraFocus").new()
   updateCameraFocus(0,0, 1)
   camFocus:setFocus(camera)
   
-  initPlanets()
-  
   time = 0
-  
-  config = require("conf")
-  
-  updateShader(love.graphics.getWidth(), love.graphics.getHeight())
 end
 
 
-function game.keypressed(key)
+-----------------
+-- KEY PRESSED --
+-----------------
+function Game.keypressed(key)
   if key == "kp-" then
-    initPlanets()
+    universe = WorldGen.createUniverseFromSeed()
+    focusedPlanet = universe.planets[1]
+    updateCameraFocus(0,0, camera.scaleX)
   end
 end
 
---[[
-local function undistort(x,y)
-  local w = love.window.getWidth()
-  local h = love.window.getHeight()
-  
-  local texW = w*config.shadervars['textureSize']
-  local texH = h*config.shadervars['textureSize']
-  local inW = w*config.shadervars['inputSize']
-  local inH = h*config.shadervars['inputSize']
-  
-  local result -- we need this
-  
-  local coord = {x=x, x=y}
-  local ratio = {x=inW/texW, y=inH/texH} -- should be 1
-  local offsety = 1.0 - ratio.y
 
-  coord.y = coord.y - offsety
-  coord.y = coord.y / ratio.y
-  coord.x = coord.x / ratio.x
-  
-    -- those four lines must be "undone"
-    local coord.y = result.y + cc.y * (1.0 + dist) * dist;
-    local coord.x = result.x + cc.x * (1.0 + dist) * dist;
-    
-    local dist = ((cc.x*cc.x) + (cc.y*cc.y)) * 0.2;
-  
-    local cc = {x=result.x-0.5, y=result.y-0.5}
-    
-  result.y = result.y * ratio.y
-  result.x = result.x * ratio.x
-  
-  result.y = result.y + offsety
-    
-  return result;
+local function getPlanetInWorld(worldX, worldY)
+  for _,planet in ipairs(universe.planets) do
+    if planet:isPointInside(worldX, worldY) then
+      return planet
+    end
+  end
+  return nil
 end
-]]--
 
-function game.mousepressed( x, y, button )
+
+local function getPlanetOnScreen(x,y)
+  local worldX = x*camera.scaleX + camera.x
+  local worldY = y*camera.scaleY + camera.y
+  return getPlanetInWorld(worldX, worldY)
+end
+
+
+-------------------
+-- MOUSE PRESSED --
+-------------------
+function Game.mousepressed( x, y, button )
   if (button == "l") then
-    local worldX = x*camera.scaleX + camera.x
-    local worldY = y*camera.scaleY + camera.y
-    
-    for _,planet in ipairs(planets) do
-      if planet:isPointInside(worldX, worldY) then
-        focusedPlanet = planet
-        focusedPlanet:setStatusRing(0,0,255,0.5)
-        updateCameraFocus(focusedPlanet.x,focusedPlanet.y, camFocus.scale)
-        break
-      end
+    local planet = getPlanetOnScreen(x, y)
+    if planet then
+      focusedPlanet = planet
+      focusedPlanet:setStatusRing(0,0,255,0.5)
+      updateCameraFocus(focusedPlanet.x,focusedPlanet.y, camFocus.scale)
     end
     
+  elseif (button == "r") then
+    local planet = getPlanetOnScreen(x, y)
+    if planet then
+      local Cat = require("game.entities.Cat")
+      table.insert(planet.entities, Cat.new(planet,0,5))
+    end
+  
   elseif (button == "wu") then
     updateCameraFocus(focusedPlanet.x,focusedPlanet.y, camFocus.scale*0.8)
+    
   elseif (button == "wd") then
     updateCameraFocus(focusedPlanet.x,focusedPlanet.y, camFocus.scale*1.2)
   end
@@ -165,7 +102,7 @@ end
 ------------
 -- UPDATE --
 ------------
-function game.update(dt)
+function Game.update(dt)
   time = time + dt
   
   local kb = love.keyboard
@@ -182,49 +119,93 @@ function game.update(dt)
     camFocus:move(1000*dt, 0) 
   end
   
-  if config.shadervars['time'] then
-    shader:send('time', {time})
-  end
-  
-  for _,planet in ipairs(planets) do
-    planet:update(dt)
+  for _,planet in ipairs(universe.planets) do
+    planet:update(dt, camera.scaleX)
   end
   
   camFocus:fadeFocus(camera, dt)
 end
 
 
-
 -------------
 -- DRAWING --
 -------------
 local lg, lw = love.graphics, love.window
-function game.draw()
-  lg.setCanvas(canvas)
-    lg.setBackgroundColor(0,150,200)
-    --lg.setBackgroundColor(0,0,0)
-    lg.clear()
+function Game.draw()
+  lg.setBackgroundColor(0,150,200)
+  --lg.setBackgroundColor(0,0,0)
+  lg.clear()
+  
+  camera:set()
+    if focusedPlanet then
+      lg.setColor(255,255,255,50)
+      lg.circle("fill",focusedPlanet.x,focusedPlanet.y,focusedPlanet.radius*2, focusedPlanet.circleSegments*2)
+    end
+  
+    for _,p in ipairs(universe.planets) do
+      if p:isInView(camera.x, camera.y, lw.getWidth()*camera.scaleX, lw.getHeight()*camera.scaleY) then
+        p:draw()
+      end
+    end
+  camera:unset()
+  
+  if globals.debug then
+    lg.setColor(0,0,0,150)
+    lg.rectangle("fill",0,100,200,620)
     
-    camera:set()
-      for _,p in ipairs(planets) do
-        if p:isInView(camera.x, camera.y, lw.getWidth()*camera.scaleX, lw.getHeight()*camera.scaleY) then
-          p:draw()
+    local printY = 103
+    
+    local px =  function(indent)
+                  return 3 + (indent or 0)*15
+                end
+    
+    local py =  function()
+                  local current = printY
+                  printY = printY + 20
+                  return current
+                end
+    
+    lg.setColor(255,255,255)
+    lg.print("zoom: "..(math.floor(camera.scaleX*1000)/1000), px(),py())
+    
+    py()
+    local allEntities = 0
+    local visibleEntities = 0
+    for _,p in ipairs(universe.planets) do
+      allEntities = allEntities + #p.entities
+      if p:isInView(camera.x, camera.y, lw.getWidth()*camera.scaleX, lw.getHeight()*camera.scaleY) then
+        for _,e in ipairs(p.entities) do
+          if e.isVisible then
+            visibleEntities = visibleEntities + 1
+          end
         end
       end
-    camera:unset()
-  lg.setCanvas()
-  
-  --lg.setShader(shader)
-    lg.setColor(255,255,255)
-    lg.draw(canvas,0,0)
-  lg.setShader()
+    end
+    lg.print("overall entities: "..allEntities, px(),py())
+    lg.print("visible entities: "..visibleEntities, px(),py())
+    
+    -- focused planet debug
+    py()
+    lg.print("FOCUSED PLANET", px(),py())
+    
+    lg.print("x="..focusedPlanet.x..", y="..focusedPlanet.y, px(1), py())
+    lg.print("radius: "..focusedPlanet.radius,px(1),py())
+    local circleSegments = math.floor(focusedPlanet.radius/camera.scaleX)
+    if circleSegments < 10 then
+      circleSegments = 10
+    elseif circleSegments > 500 then
+      circleSegments = 500
+    end
+    lg.print("visible segments: "..circleSegments, px(1),py())
+    lg.print("gravity: "..focusedPlanet.gravity,px(1),py())
+    lg.print("number of entities: "..#focusedPlanet.entities,px(1),py())
+  end
 end
 
-function game.resize(w,h)
-  updateShader(w,h)
+function Game.resize(w,h)
   -- update camera
   updateCameraFocus(focusedPlanet.x, focusedPlanet.y, camFocus.scale)
   camFocus:setFocus(camera)
 end
 
-return game
+return Game

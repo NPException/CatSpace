@@ -1,6 +1,7 @@
 -- global variables
 GLOBALS = { debug = false }
 local globals = GLOBALS
+string.hash = require("lib.stringhash")
 
 -- main variables
 local
@@ -12,11 +13,12 @@ local state
 -- LOAD --
 function love.load(arg)
   globals.debug = false
+  globals.config = require("conf")
   
   love.graphics.setDefaultFilter("nearest","nearest")
   love.graphics.setBackgroundColor(0,100,150)
   
-  state = require("game.game")
+  state = require("game.Game")
   state.load()
 end
 

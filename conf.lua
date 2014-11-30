@@ -1,4 +1,6 @@
-local config = {}
+local config = {
+  worldseed="This is NOT Sparta!!!"
+}
 
 function love.conf(t)
   t.version = "0.9.1"                -- The LÖVE version this game was made for (string)
@@ -15,18 +17,6 @@ function love.conf(t)
   t.window.display = 1               -- Index of the monitor to show the window in (number)
     
   t.modules.joystick = false         -- Enable the joystick module (boolean)
-  
-  
-  
-  config.shadername = "CRT-Simple"
-  
-  config.shadervars = {
-    -- true false
-    ['inputSize'] = 0.3, 
-    ['outputSize'] = 0.25,
-    ['textureSize'] = 0.3,
-    ['time'] = false
-  }
 end
 
 return config;
