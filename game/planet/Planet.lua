@@ -3,6 +3,8 @@ local globals = GLOBALS
 local Planet = {}
 Planet.__index = Planet
 
+local PI, TAU = math.pi, math.pi*2
+
 -- Planet class method new
 function Planet.new(x, y, radius, gravity)
   local p = setmetatable({}, Planet) -- set Planet as metatable so functions not overridden by the instance are looked up on Planet
@@ -13,6 +15,7 @@ function Planet.new(x, y, radius, gravity)
   p.y           = y           or 0
   p.radius      = radius      or 100.0
   p.gravity     = gravity     or 9.81
+  p.statRings   = {}
   
   return p
 end
@@ -34,17 +37,27 @@ function Planet:isPointInside(x,y)
   return (dx*dx + dy*dy) < (self.radius*self.radius)
 end
 
-
-function Planet:setHurt()
-  self.hurt = 255
+-- rgb of the status ring, and the time in seconds it will be visible
+function Planet:setStatusRing(r,g,b,time)
+  local ring = { r=r, g=g, b=b, time=time, radius=self.radius }
+  table.insert(self.statRings, ring)
 end
 
+function Planet:isInView(camX,camY,camW,camH)
+  return (self.x+self.radius+50) > camX
+      and (self.x-self.radius-50) < (camX+camW)
+      and (self.y+self.radius+50) > camY
+      and (self.y-self.radius-50) < (camY+camH)
+end
 
 function Planet:update(dt)
-  if (self.hurt) then
-    self.hurt = self.hurt - 255*dt
-    if (self.hurt <= 0) then
-      self.hurt = nil
+  -- reverse iterate, so the remove does not break the iteration
+  for i=#self.statRings,1,-1 do
+    local ring = self.statRings[i]
+    local dist = (self.radius/ring.time) * dt
+    ring.radius = ring.radius - dist
+    if (ring.radius <= 0) then
+      table.remove(self.statRings,i)
     end
   end
 end
@@ -56,9 +69,9 @@ function Planet:draw()
   lg.setColor(255,255,255)
   lg.circle("fill", self.x, self.y, self.radius)
   
-  if (self.hurt) then
-    lg.setColor(255,0,0,self.hurt)
-    lg.circle("fill", self.x, self.y, self.radius)
+  for _,ring in ipairs(self.statRings) do
+    lg.setColor(ring.r,ring.g,ring.b,255*(ring.radius/self.radius))
+    lg.circle("fill", self.x, self.y, ring.radius)
   end
   
   if (globals.debug) then
