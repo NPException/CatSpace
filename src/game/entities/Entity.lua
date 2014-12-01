@@ -33,16 +33,19 @@ function Entity:move(distance)
 end
 
 
-function Entity:update(dt, currentZoom)
+function Entity:calcVisibility(currentZoom)
+  self.isVisible = (max(self.w,self.h)/currentZoom >= 1)
+end
+
+
+function Entity:update(dt)
   self:move(self.speed*dt)
   
-  self.isVisible=true
-  
   if self.updateCustom then
-    self:updateCustom(dt, currentZoom)
-  else
-    self.isVisible = (max(self.w,self.h)/currentZoom >= 1)
+    self:updateCustom(dt)
   end
+    
+  self:calcVisibility(globals.config.currentZoom)
 end
 
 local lg = love.graphics

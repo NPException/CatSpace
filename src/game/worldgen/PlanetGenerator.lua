@@ -3,28 +3,23 @@ local PlanetGenerator = {}
 local Planet = require("game.bodies.Planet")
 
 
-local function tooCloseToOtherPlanet(planet, planets) 
-  local result = false
-  local minDist = 100.0
-  for _,p in ipairs(planets) do
-    if planet:surfaceDistance(p) < minDist then
-      result = true
-      break
-    end
-  end
-  return result
-end
-
 function PlanetGenerator.createPlanets(rng, count)
-  local planets = { Planet.new(0,0,50) }
+  local planets = { Planet.new(0,0,75) }
+  local rngState = rng:getState()
+  
+  local Cat = require("game.entities.Cat")
+  for i=1,6 do
+    table.insert(planets[1].entities, Cat.new(planets[1], rng:random(), 1))
+  end
+  rng:setState(rngState)
   
   for i=1,count do
     local newPlanet    
     repeat
       local x,y = rng:random(-12800,12800), rng:random(-7200,7200)
-      local radius = rng:random(10,200)
+      local radius = rng:random(20,200)
       newPlanet = Planet.new(x,y,radius)
-    until not tooCloseToOtherPlanet(newPlanet, planets)
+    until not newPlanet:closeToOtherBody(planets, 100)
     table.insert(planets, newPlanet)
   end
   

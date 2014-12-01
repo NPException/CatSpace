@@ -10,10 +10,6 @@ local WorldGen = require("game.worldgen.WorldGenerator")
 local universe
 local focusedPlanet
 
-local
-  time,
-  config
-
 
 local function updateCameraFocus(worldX, worldY, scale)
   camFocus.scale = math.min(scale,(720*23)/love.window.getHeight())
@@ -37,8 +33,6 @@ function Game.load()
   camFocus = require("camera.CameraFocus").new()
   updateCameraFocus(0,0, 1)
   camFocus:setFocus(camera)
-  
-  time = 0
 end
 
 
@@ -63,11 +57,10 @@ local function getPlanetInWorld(worldX, worldY)
   return nil
 end
 
-
-local function getPlanetOnScreen(x,y)
-  local worldX = x*camera.scaleX + camera.x
-  local worldY = y*camera.scaleY + camera.y
-  return getPlanetInWorld(worldX, worldY)
+local function toWorldCoordinates(winX, winY)
+  local worldX = winX*camera.scaleX + camera.x
+  local worldY = winY*camera.scaleY + camera.y
+  return worldX, worldY
 end
 
 
@@ -76,18 +69,32 @@ end
 -------------------
 function Game.mousepressed( x, y, button )
   if (button == "l") then
-    local planet = getPlanetOnScreen(x, y)
+    local worldX, worldY = toWorldCoordinates(x,y)
+    local planet = getPlanetInWorld(worldX, worldY)
     if planet then
-      focusedPlanet = planet
-      focusedPlanet:setStatusRing(0,0,255,0.5)
-      updateCameraFocus(focusedPlanet.x,focusedPlanet.y, camFocus.scale)
+      if focusedPlanet == planet then
+        for _,resource in ipairs(focusedPlanet.resources) do
+          if resource:isPointInside(worldX, worldY) then
+            resource:setStatusRing(0,255,0, 0.3)
+            resource:decrease(10)
+          end
+        end
+      else
+        focusedPlanet = planet
+        focusedPlanet:setStatusRing(0,0,255,0.5)
+        updateCameraFocus(focusedPlanet.x,focusedPlanet.y, camFocus.scale)
+      end
     end
     
   elseif (button == "r") then
-    local planet = getPlanetOnScreen(x, y)
+    local worldX, worldY = toWorldCoordinates(x,y)
+    local planet = getPlanetInWorld(worldX, worldY)
     if planet then
       local Cat = require("game.entities.Cat")
-      table.insert(planet.entities, Cat.new(planet,math.random()))
+      local Entity = require("game.entities.Entity")
+      local pos = math.random()
+      table.insert(planet.entities, Cat.new(planet, pos, 1))
+      --table.insert(planet.entities, Entity.new(planet, pos+0.01, 1, 2, 15))
     end
   
   elseif (button == "wu") then
@@ -103,8 +110,6 @@ end
 -- UPDATE --
 ------------
 function Game.update(dt)
-  time = time + dt
-  
   local kb = love.keyboard
   if (kb.isDown("up")) then
     camFocus:move(0, -1000*dt) 
@@ -119,11 +124,13 @@ function Game.update(dt)
     camFocus:move(1000*dt, 0) 
   end
   
-  for _,planet in ipairs(universe.planets) do
-    planet:update(dt, camera.scaleX)
-  end
-  
   camFocus:fadeFocus(camera, dt)
+  
+  globals.config.currentZoom = camera.scaleX
+  
+  for _,planet in ipairs(universe.planets) do
+    planet:update(dt)
+  end
 end
 
 
@@ -199,6 +206,13 @@ function Game.draw()
     lg.print("visible segments: "..circleSegments, px(1),py())
     lg.print("gravity: "..focusedPlanet.gravity,px(1),py())
     lg.print("number of entities: "..#focusedPlanet.entities,px(1),py())
+    local visibleResources = 0
+    for _,res in ipairs(focusedPlanet.resources) do
+      if res.isVisible then
+        visibleResources = visibleResources + 1
+      end
+    end
+    lg.print("visible resources: "..visibleResources, px(1),py())
   end
 end
 

@@ -10,10 +10,12 @@ local
 
 local state
 
+
 -- LOAD --
 function love.load(arg)
   globals.debug = false
   globals.config = require("conf")
+  globals.time = 0
   
   love.graphics.setDefaultFilter("nearest","nearest")
   love.graphics.setBackgroundColor(0,100,150)
@@ -47,6 +49,7 @@ end
 
 -- UPDATE --
 function love.update(dt)
+  globals.time = globals.time + dt
   state.update(dt)
   
   if (globals.debug) then

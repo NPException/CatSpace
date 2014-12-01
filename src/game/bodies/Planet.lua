@@ -4,13 +4,6 @@ local Planet = setmetatable({}, Body)
 Planet.__index = Planet
 
 
-local Entity = require("game.entities.Entity")
-
-local min = math.min
-local max = math.max
-local sqrt = math.sqrt
-local floor = math.floor
-
 -- Planet class method new
 function Planet.new(x, y, radius, gravity)
   -- set Planet as metatable so functions not overridden by the instance are looked up on Planet
@@ -22,16 +15,20 @@ function Planet.new(x, y, radius, gravity)
 end
 
 
-function Planet:updateCustom(dt, currentZoom)
+function Planet:update(dt)
+  -- super call
+  Body.update(self, dt)
+  
   -- update entities
   for _,e in ipairs(self.entities) do
-    e:update(dt, currentZoom)
+    e:update(dt)
   end
 end
 
 local lg = love.graphics
 function Planet:draw()
   self:drawBody()
+  self:drawResources()
   for _,e in ipairs(self.entities) do
     e:draw()
   end

@@ -3,6 +3,8 @@ local Body = {}
 Body.__index = Body
 
 
+local Resource
+
 local min = math.min
 local max = math.max
 local sqrt = math.sqrt
@@ -10,18 +12,43 @@ local floor = math.floor
 
 
 function Body.new(x, y, radius, gravity, color)
-  local p = setmetatable({}, Planet)
+  if not Resource then
+    Resource = require("game.bodies.Resource")
+  end  
+
+  local p = setmetatable({}, Body)
   
   -- VARIABLE   = VALUE       or DEFAULT --
-  p.parent      = nil -- unused
   p.x           = x           or 0
   p.y           = y           or 0
   p.radius      = radius      or 100.0
   p.gravity     = gravity     or 9.81
   p.color       = color       or {0,0,0}
   
+  p.resources   = {}
   p.statRings   = {}
   return p
+end
+
+-- returns whether the resource could be added successfully or not
+function Body:addResource(radius, pos)
+  local resource = Resource.new(self, radius, pos)
+  local invalid = resource:closeToOtherBody(self.resources, 2)
+  
+  if invalid then return false end
+  
+  table.insert(self.resources, resource)
+  return true
+end
+
+
+function Body:removeResource(resource)
+  for i,res in ipairs(self.resources) do
+    if res == resource then
+      table.remove(self.resources, i)
+      break
+    end
+  end
 end
 
 
@@ -35,6 +62,18 @@ function Body:surfaceDistance(other)
 end
 
 
+function Body:closeToOtherBody(bodies, minDist) 
+  local result = false
+  for _,b in ipairs(bodies) do
+    if self:surfaceDistance(b) < minDist then
+      result = true
+      break
+    end
+  end
+  return result
+end
+
+
 function Body:isPointInside(x,y)
   local dx = self.x - x
   local dy = self.y - y
@@ -43,9 +82,10 @@ function Body:isPointInside(x,y)
 end
 
 
--- rgb of the status ring, and the time in seconds it will be visible
-function Body:setStatusRing(r,g,b,time)
-  local ring = { r=r, g=g, b=b, time=time, radius=self.radius }
+-- rgb of the status ring, and the time in seconds it will be visible and its radius
+function Body:setStatusRing(r,g,b,time, radius)
+  radius = radius or self.radius
+  local ring = { r=r, g=g, b=b, time=time, radius=radius, initialRadius=radius }
   table.insert(self.statRings, ring)
 end
 
@@ -58,27 +98,33 @@ function Body:isInView(camX,camY,camW,camH)
 end
 
 
-function Body:update(dt, currentZoom)
-  -- update draw segments
+function Body:updateCircleSegments(currentZoom)
   self.circleSegments = floor(self.radius/currentZoom)
   if self.circleSegments < 10 then
     self.circleSegments = 10
   elseif self.circleSegments > 500 then
     self.circleSegments = 500
   end
+end
+
+
+function Body:update(dt)
+  local currentZoom = globals.config.currentZoom
+  -- update draw segments
+  self:updateCircleSegments(currentZoom)
+  
+  for _,res in ipairs(self.resources) do
+    res:update(dt)
+  end
   
   -- reverse iterate, so the remove does not break the iteration
   for i=#self.statRings,1,-1 do
     local ring = self.statRings[i]
-    local dist = (self.radius/ring.time) * dt
+    local dist = (ring.initialRadius/ring.time) * dt
     ring.radius = ring.radius - dist
     if (ring.radius <= 0) then
       table.remove(self.statRings,i)
     end
-  end
-  
-  if self.updateCustom then
-    self:updateCustom(dt, currentZoom)
   end
 end
 
@@ -97,5 +143,11 @@ function Body:drawStatRings()
   end
 end
 
+
+function Body:drawResources()
+  for _,res in ipairs(self.resources) do
+    res:draw()
+  end
+end
 
 return Body
