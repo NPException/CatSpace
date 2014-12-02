@@ -15,3 +15,6 @@ You must gather resources (just one type for now) and create buildings. Your fir
 
 - [ ] **Build rockets manually** (like KSP simplified)
  - [ ] research parts first
+
+REMEMBER:
+  Must not end streak!
