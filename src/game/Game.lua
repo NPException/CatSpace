@@ -91,10 +91,8 @@ function Game.mousepressed( x, y, button )
     local planet = getPlanetInWorld(worldX, worldY)
     if planet then
       local Cat = require("game.entities.Cat")
-      local Entity = require("game.entities.Entity")
       local pos = math.random()
       table.insert(planet.entities, Cat.new(planet, pos, 1))
-      --table.insert(planet.entities, Entity.new(planet, pos+0.01, 1, 2, 15))
     end
   
   elseif (button == "wu") then
@@ -112,16 +110,16 @@ end
 function Game.update(dt)
   local kb = love.keyboard
   if (kb.isDown("up")) then
-    camFocus:move(0, -1000*dt) 
+    camFocus:move(0, -1000*dt*camFocus.scale) 
   end
   if (kb.isDown("down")) then
-    camFocus:move(0, 1000*dt) 
+    camFocus:move(0, 1000*dt*camFocus.scale) 
   end
   if (kb.isDown("left")) then
-    camFocus:move(-1000*dt, 0) 
+    camFocus:move(-1000*dt*camFocus.scale, 0) 
   end
   if (kb.isDown("right")) then
-    camFocus:move(1000*dt, 0) 
+    camFocus:move(1000*dt*camFocus.scale, 0) 
   end
   
   camFocus:fadeFocus(camera, dt)
@@ -140,7 +138,6 @@ end
 local lg, lw = love.graphics, love.window
 function Game.draw()
   lg.setBackgroundColor(0,150,200)
-  --lg.setBackgroundColor(0,0,0)
   lg.clear()
   
   camera:set()
@@ -174,6 +171,8 @@ function Game.draw()
     
     lg.setColor(255,255,255)
     lg.print("zoom: "..(math.floor(camera.scaleX*1000)/1000), px(),py())
+    lg.print("camera x: "..math.floor(camera.x), px(),py())
+    lg.print("camera y: "..math.floor(camera.y), px(),py())
     
     py()
     local allEntities = 0
