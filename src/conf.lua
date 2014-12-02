@@ -19,4 +19,4 @@ function love.conf(t)
   t.modules.joystick = false         -- Enable the joystick module (boolean)
 end
 
-return config;
+return config
