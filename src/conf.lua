@@ -1,10 +1,6 @@
-local config = {
-  worldseed="This is NOT Sparta!!!"
-}
-
 function love.conf(t)
   t.version = "0.9.1"                -- The LÖVE version this game was made for (string)
-  t.window.title = "Preparation"    -- The window title (string)
+  t.window.title = "Preparation"     -- The window title (string)
   t.window.icon = nil                -- Filepath to an image to use as the window's icon (string)
   t.window.width = 1280              -- The window width (number)
   t.window.height = 720              -- The window height (number)
@@ -19,4 +15,8 @@ function love.conf(t)
   t.modules.joystick = false         -- Enable the joystick module (boolean)
 end
 
+
+local config = {
+  worldseed="This is NOT Sparta!!!"
+}
 return config
