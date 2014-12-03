@@ -98,8 +98,8 @@ function Body:isInView(camX,camY,camW,camH)
 end
 
 
-function Body:updateCircleSegments(currentZoom)
-  self.circleSegments = floor(self.radius/currentZoom)
+function Body:updateCircleSegments()
+  self.circleSegments = floor(self.radius/globals.config.currentZoom)
   if self.circleSegments < 10 then
     self.circleSegments = 10
   elseif self.circleSegments > 500 then
@@ -109,9 +109,8 @@ end
 
 
 function Body:update(dt)
-  local currentZoom = globals.config.currentZoom
   -- update draw segments
-  self:updateCircleSegments(currentZoom)
+  self:updateCircleSegments()
   
   for _,res in ipairs(self.resources) do
     res:update(dt)

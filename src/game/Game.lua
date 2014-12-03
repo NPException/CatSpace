@@ -74,7 +74,7 @@ function Game.mousepressed( x, y, button )
     if planet then
       if focusedPlanet == planet then
         for _,resource in ipairs(focusedPlanet.resources) do
-          if resource:isPointInside(worldX, worldY) then
+          if resource:isPointInside(worldX, worldY) and (not resource:isEmpty()) then
             resource:setStatusRing(0,255,0, 0.3)
             resource:decrease(10)
           end

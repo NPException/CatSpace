@@ -29,8 +29,8 @@ function Cat.new(planet, pos, size)
 end
 
 
-function Cat:calcVisibility(currentZoom)
-  self.isVisible = image:getWidth()*scale/currentZoom >= 2
+function Cat:calcVisibility()
+  self.isVisible = image:getWidth()*scale/globals.config.currentZoom >= 2
 end
 
 
