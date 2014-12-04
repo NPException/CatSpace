@@ -1,7 +1,7 @@
 # Prepurration for  a space program
 The game is about colonizing/conquering other planets.
 
-# Current Controls
+## Current Controls
 - Escape: quit
 - Numpad - : regenerate world
 - Numpad + : debug mode
