@@ -18,6 +18,9 @@ function Resource.new(parentBody, radius, pos)
   if (radius > parentBody.radius-10) then
     error("Radius of resource too large for parent body. Maximum possible = "..(parentBody.radius-10)..", amount given: "..radius, 2)
   end
+  
+  local amount = math.floor(radius*radius*PI)
+  radius = sqrt(amount/PI)
 
   local color = {50+math.random(-10,10),40+math.random(-10,10),20+math.random(-10,10)}
   local depth = parentBody.radius - radius - 10
@@ -29,7 +32,7 @@ function Resource.new(parentBody, radius, pos)
 
   -- VARIABLE   = VALUE
   r.parent                  = parentBody
-  r.amount                  = radius*radius*PI
+  r.amount                  = amount
   r.amountRadius            = radius
   r.resColor                = color
   r.pos                     = pos
@@ -43,6 +46,7 @@ function Resource:decrease(decreaseAmount)
   self.amount = self.amount - decreaseAmount
   if self.amount < 0 then
     decreaseAmount = decreaseAmount+self.amount
+    self.amount = 0
   end
   self.amountRadius = sqrt(self.amount/PI)
   return decreaseAmount
