@@ -90,11 +90,17 @@ function Body:setStatusRing(r,g,b,time, radius)
 end
 
 
-function Body:isInView(camX,camY,camW,camH)
-  return (self.x+self.radius+50) > camX
-      and (self.x-self.radius-50) < (camX+camW)
-      and (self.y+self.radius+50) > camY
-      and (self.y-self.radius-50) < (camY+camH)
+local lw = love.window
+function Body:isInView(camera)
+  local camX = camera.x
+  local camY = camera.y
+  local camW = lw.getWidth()*camera.scale
+  local camH = lw.getHeight()*camera.scale
+  -- okay Jezza, you won.
+  return  (self.x + self.radius + 50) > camera.x
+      and (self.x - self.radius - 50) < (camX+camW)
+      and (self.y + self.radius + 50) > camera.y
+      and (self.y - self.radius - 50) < (camY+camH)
 end
 
 

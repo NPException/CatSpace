@@ -7,7 +7,6 @@ function CameraFocus.new(x,y,scale,done)
   cf.x          = x       or 0
   cf.y          = y       or 0
   cf.scale      = scale   or 1
-  cf.done       = done    or true
   return cf
 end
 
@@ -18,13 +17,13 @@ end
 
 function CameraFocus:setFocus(camera)
   camera:setPosition(self.x,self.y)
-  camera:setScale(self.scale, self.scale)
+  camera:setScale(self.scale)
 end
 
 function CameraFocus:fadeFocus(camera, dt)
   local dx = self.x - camera.x
   local dy = self.y - camera.y
-  local ds = self.scale - camera.scaleX
+  local ds = self.scale - camera.scale
   
   local speed = 5
   
@@ -34,8 +33,7 @@ function CameraFocus:fadeFocus(camera, dt)
   
   camera.x = camera.x + changeX
   camera.y = camera.y + changeY
-  camera.scaleX = camera.scaleX + changeScale
-  camera.scaleY = camera.scaleY + changeScale
+  camera.scale = camera.scale + changeScale
 end
 
 return CameraFocus

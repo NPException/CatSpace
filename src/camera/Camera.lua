@@ -3,8 +3,7 @@
 local Camera = {
     x = 0,
     y = 0,
-    scaleX = 1,
-    scaleY = 1,
+    scale = 1,
     rotation = 0
   }
 Camera.__index = Camera
@@ -18,7 +17,7 @@ local lg = love.graphics
 function Camera:set()
   lg.push()
   lg.rotate(-self.rotation)
-  lg.scale(1 / self.scaleX, 1 / self.scaleY)
+  lg.scale(1 / self.scale, 1 / self.scale)
   lg.translate(-self.x, -self.y)
 end
 
@@ -35,20 +34,13 @@ function Camera:rotate(dr)
   self.rotation = self.rotation + dr
 end
 
-function Camera:scale(sx, sy)
-  sx = sx or 1
-  self.scaleX = self.scaleX * sx
-  self.scaleY = self.scaleY * (sy or sx)
-end
-
 function Camera:setPosition(x, y)
   self.x = x or self.x
   self.y = y or self.y
 end
 
-function Camera:setScale(sx, sy)
-  self.scaleX = sx or self.scaleX
-  self.scaleY = sy or self.scaleY
+function Camera:setScale(s)
+  self.scale = s or self.scale
 end
 
 return Camera
