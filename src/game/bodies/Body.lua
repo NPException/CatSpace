@@ -94,13 +94,13 @@ local lw = love.window
 function Body:isInView(camera)
   local camX = camera.x
   local camY = camera.y
-  local camWHalf = lw.getWidth()*camera.scale*0.5
-  local camHHalf = lw.getHeight()*camera.scale*0.5
+  local camW = lw.getWidth()*camera.scale
+  local camH = lw.getHeight()*camera.scale
   -- okay Jezza, you won.
-  return  (self.x + self.radius + 50) > (camX - camWHalf)
-      and (self.x - self.radius - 50) < (camX + camWHalf)
-      and (self.y + self.radius + 50) > (camY - camHHalf)
-      and (self.y - self.radius - 50) < (camY + camHHalf)
+  return  (self.x + self.radius + 50) > camera.x
+      and (self.x - self.radius - 50) < (camX+camW)
+      and (self.y + self.radius + 50) > camera.y
+      and (self.y - self.radius - 50) < (camY+camH)
 end
 
 

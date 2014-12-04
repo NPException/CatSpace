@@ -2,8 +2,6 @@ local globals = GLOBALS
 local Game = {}
 
 
-local lg, lw = love.graphics, love.window
-
 local camera
 local camFocus
 
@@ -13,21 +11,14 @@ local universe
 local focusedPlanet
 
 
-local function toWorldCoordinates(winX, winY)
-  local worldX = (winX-lg.getWidth()*0.5) * camera.scale + camera.x
-  local worldY = (winY-lg.getHeight()*0.5) * camera.scale + camera.y
-  return worldX, worldY
-end
-
-
 local function updateCameraFocus(worldX, worldY, scale)
   camFocus.scale = math.min(scale,(720*23)/love.window.getHeight())
   local radius = focusedPlanet:isInView(camera) and focusedPlanet.radius or 20 -- 20 is the minimum planet radius
   local minScale = (radius*2) / (love.window.getHeight()-100)
   camFocus.scale = math.max(camFocus.scale, minScale)
 
-  camFocus.x = worldX
-  camFocus.y = worldY
+  camFocus.x = (-love.window.getWidth()/2) * camFocus.scale + worldX
+  camFocus.y = (-love.window.getHeight()/2) * camFocus.scale + worldY
 end
 
 
@@ -40,15 +31,16 @@ local function updateCameraFocusWithMouse(scale)
   
   local mouseX, mouseY =  love.mouse.getPosition()
   
-  local mouseWX, mouseWY = toWorldCoordinates(mouseX, mouseY)
+  local mouseWX = mouseX*camera.scale + camera.x
+  local mouseWY = mouseY*camera.scale + camera.y
 
   camFocus.scale = math.min(scale,(720*23)/love.window.getHeight())
   local radius = focusedPlanet:isInView(camera) and focusedPlanet.radius or 20 -- 20 is the minimum planet radius
   local minScale = (radius*2) / (love.window.getHeight()-100)
   camFocus.scale = math.max(camFocus.scale, minScale)
   
-  camFocus.x = mouseWX - (mouseX-lw.getWidth()*0.5) * camFocus.scale
-  camFocus.y = mouseWY - (mouseY-lw.getHeight()*0.5) * camFocus.scale
+  camFocus.x = mouseWX - (mouseX)*camFocus.scale
+  camFocus.y = mouseWY - (mouseY)*camFocus.scale
 end
 
 
@@ -90,6 +82,12 @@ local function getPlanetInWorld(worldX, worldY)
   return nil
 end
 
+local function toWorldCoordinates(winX, winY)
+  local worldX = winX*camera.scale + camera.x
+  local worldY = winY*camera.scale + camera.y
+  return worldX, worldY
+end
+
 
 -------------------
 -- MOUSE PRESSED --
@@ -113,19 +111,13 @@ function Game.mousepressed( x, y, button )
       end
     end
 
-  elseif (button == "r" or button == "m") then
+  elseif (button == "r") then
     local worldX, worldY = toWorldCoordinates(x,y)
     local planet = getPlanetInWorld(worldX, worldY)
     if planet then
       local Cat = require("game.entities.Cat")
-      local num = 1
-      if button == "m" then
-        num = 1000
-      end
-      for i=1,num do
-        local pos = math.random()
-        table.insert(planet.entities, Cat.new(planet, pos, 1))
-      end
+      local pos = math.random()
+      table.insert(planet.entities, Cat.new(planet, pos, 1))
     end
 
   elseif (button == "wu") then
@@ -170,6 +162,7 @@ end
 -------------
 -- DRAWING --
 -------------
+local lg, lw = love.graphics, love.window
 local function drawDebugInfo()
   lg.setColor(0,0,0,150)
   lg.rectangle("fill",0,50,200,lw.getHeight()-50)
