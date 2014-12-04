@@ -13,12 +13,13 @@ function Camera.new()
 end
 
 local lg = love.graphics
+local lw = love.window
 
 function Camera:set()
   lg.push()
   lg.rotate(-self.rotation)
   lg.scale(1 / self.scale, 1 / self.scale)
-  lg.translate(-self.x, -self.y)
+  lg.translate(-self.x + (lw.getWidth()/2)*self.scale, -self.y + (lw.getHeight()/2)*self.scale)
 end
 
 function Camera:unset()
