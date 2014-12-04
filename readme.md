@@ -1,6 +1,15 @@
 # Prepurration for  a space program
 The game is about colonizing/conquering other planets.
 
+# Current Controls
+- Escape: quit
+- Numpad - : regenerate world
+- Numpad + : debug mode
+- . : center view on selected planet
+- click on planet: select
+- right click planet: spawn cat
+- middle click planet: CATSPLOSION!
+
 ## Basics
 So you start on your home planet, with little units moving along it's surface.
 
