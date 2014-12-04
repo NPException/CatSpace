@@ -1,4 +1,4 @@
-# Preparation for  a space program
+# Prepurration for  a space program
 The game is about colonizing/conquering other planets.
 
 ## Basics
