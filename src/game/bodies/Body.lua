@@ -91,10 +91,10 @@ end
 
 
 function Body:isInView(camX,camY,camW,camH)
-  return (self.x+self.radius+50) > camX
-      and (self.x-self.radius-50) < (camX+camW)
-      and (self.y+self.radius+50) > camY
-      and (self.y-self.radius-50) < (camY+camH)
+  return  (self.x + self.radius + 50) > camX
+      and (self.x - self.radius - 50) < (camX+camW)
+      and (self.y + self.radius + 50) > camY
+      and (self.y - self.radius - 50) < (camY+camH)
 end
 
 

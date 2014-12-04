@@ -10,14 +10,29 @@ local WorldGen = require("game.worldgen.WorldGenerator")
 local universe
 local focusedPlanet
 
-
 local function updateCameraFocus(worldX, worldY, scale)
   camFocus.scale = math.min(scale,(720*23)/love.window.getHeight())
   local minScale = (focusedPlanet.radius*2) / (love.window.getHeight()-100)
   camFocus.scale = math.max(camFocus.scale, minScale)
-  camFocus.x = (-love.window.getWidth()/2 ) * camFocus.scale + worldX
-  camFocus.y = (-love.window.getHeight()/2 ) * camFocus.scale + worldY
+  
+  camFocus.x = (-love.window.getWidth()/2) * camFocus.scale + worldX
+  camFocus.y = (-love.window.getHeight()/2) * camFocus.scale + worldY
   camFocus.done = false
+end
+
+local function updateCameraFocusWithMouse(scale)
+  if scale < 1 and focusedPlanet:isInView(camera.x, camera.y, love.window.getWidth(), love.window.getHeight()) then
+    updateCameraFocus(focusedPlanet.x, focusedPlanet.y, scale)
+    return
+  end
+  
+  camFocus.scale = math.min(scale,(720*23)/love.window.getHeight())
+  local minScale = (focusedPlanet.radius*2) / (love.window.getHeight()-100)
+  camFocus.scale = math.max(camFocus.scale, minScale)
+  
+  local mouseX, mouseY =  love.mouse.getPosition()
+  camFocus.x = (-love.window.getWidth()/2) * camFocus.scale + (mouseX * camera.scaleX + camera.x)
+  camFocus.y = (-love.window.getHeight()/2) * camFocus.scale + (mouseY * camera.scaleY + camera.y) 
 end
 
 
@@ -43,7 +58,9 @@ function Game.keypressed(key)
   if key == "kp-" then
     universe = WorldGen.createUniverseFromSeed()
     focusedPlanet = universe.planets[1]
-    updateCameraFocus(0,0, camera.scaleX)
+    updateCameraFocus(0, 0, 1)
+  elseif key == "." or key == "kp." then
+    updateCameraFocus(focusedPlanet.x, focusedPlanet.y, camFocus.scale)
   end
 end
 
@@ -62,7 +79,6 @@ local function toWorldCoordinates(winX, winY)
   local worldY = winY*camera.scaleY + camera.y
   return worldX, worldY
 end
-
 
 -------------------
 -- MOUSE PRESSED --
@@ -96,13 +112,12 @@ function Game.mousepressed( x, y, button )
     end
   
   elseif (button == "wu") then
-    updateCameraFocus(focusedPlanet.x,focusedPlanet.y, camFocus.scale*0.8)
+    updateCameraFocusWithMouse(camFocus.scale*0.8)
     
   elseif (button == "wd") then
-    updateCameraFocus(focusedPlanet.x,focusedPlanet.y, camFocus.scale*1.2)
+    updateCameraFocusWithMouse(camFocus.scale*1.2)
   end
 end
-
 
 ------------
 -- UPDATE --
@@ -173,6 +188,10 @@ function Game.draw()
     lg.print("zoom: "..(math.floor(camera.scaleX*1000)/1000), px(),py())
     lg.print("camera x: "..math.floor(camera.x), px(),py())
     lg.print("camera y: "..math.floor(camera.y), px(),py())
+    
+    local mouseX, mouseY = love.mouse.getPosition()
+    lg.print("mouse x:"..math.floor(mouseX), px(), py())
+    lg.print("mouse y:"..math.floor(mouseY), px(), py())
     
     py()
     local allEntities = 0
