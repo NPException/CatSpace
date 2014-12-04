@@ -35,7 +35,8 @@ end
 
 
 function Cat:updateCustom(dt)
-  -- nothing to do yet
+  self.x = self.planet.x + sin(self.pos*TAU)*self.planet.radius
+  self.y = self.planet.y - cos(self.pos*TAU)*self.planet.radius
 end
 
 
