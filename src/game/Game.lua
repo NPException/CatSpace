@@ -63,6 +63,7 @@ function Game.load()
   camFocus = require("camera.CameraFocus").new()
   updateCameraFocus(0,0, 1)
   camFocus:setFocus(camera)
+  globals.camera = camera
 end
 
 
@@ -93,8 +94,8 @@ end
 -------------------
 -- MOUSE PRESSED --
 -------------------
-function Game.mousepressed( x, y, button )
-  if (button == "l") then
+function Game.mousepressed( x, y, button, istouch )
+  if (button == 1) then
     local worldX, worldY = toWorldCoordinates(x,y)
     local planet = getPlanetInWorld(worldX, worldY)
     if planet then
@@ -112,13 +113,13 @@ function Game.mousepressed( x, y, button )
       end
     end
 
-  elseif (button == "r" or button == "m") then
+  elseif (button == 2 or button == 3) then
     local worldX, worldY = toWorldCoordinates(x,y)
     local planet = getPlanetInWorld(worldX, worldY)
     if planet then
       local Cat = require("game.entities.Cat")
       local num = 1
-      if button == "m" then
+      if button == 3 then
         num = 1000
       end
       for i=1,num do
@@ -225,19 +226,13 @@ local function drawDebugInfo()
   lg.print("== focused planet ==", px(),py())
 
   lg.print("x="..focusedPlanet.x..", y="..focusedPlanet.y, px(1), py())
-  lg.print("radius: "..focusedPlanet.radius,px(1),py())
-  local circleSegments = math.floor(focusedPlanet.radius/camera.scale)
-  if circleSegments < 10 then
-    circleSegments = 10
-  elseif circleSegments > 500 then
-    circleSegments = 500
-  end
-  lg.print("visible segments: "..circleSegments, px(1),py())
-  lg.print("gravity: "..focusedPlanet.gravity,px(1),py())
-  lg.print("number of entities: "..#focusedPlanet.entities,px(1),py())
+  lg.print("radius: "..focusedPlanet.radius, px(1), py())
+  lg.print("visible segments: "..focusedPlanet.circleSegments, px(1), py())
+  lg.print("gravity: "..focusedPlanet.gravity, px(1), py())
+  lg.print("number of entities: "..#focusedPlanet.entities, px(1), py())
   local visibleResources = 0
   
-  lg.print("== resources: "..#focusedPlanet.resources.." ==", px(1),py())
+  lg.print("== resources: "..#focusedPlanet.resources.." ==", px(1), py())
   for _,res in ipairs(focusedPlanet.resources) do
     if res.isVisible then
       visibleResources = visibleResources + 1
@@ -256,7 +251,8 @@ function Game.draw()
   camera:set()
   if focusedPlanet then
     lg.setColor(255,255,255,50)
-    lg.circle("fill",focusedPlanet.x,focusedPlanet.y,focusedPlanet.radius*2, focusedPlanet.circleSegments*2)
+    local segments = focusedPlanet.circleSegments or 250
+    lg.circle("fill",focusedPlanet.x,focusedPlanet.y,focusedPlanet.radius*2, segments*2)
   end
 
   for _,p in ipairs(universe.planets) do

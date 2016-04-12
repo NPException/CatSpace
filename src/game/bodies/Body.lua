@@ -4,6 +4,7 @@ Body.__index = Body
 
 
 local Resource
+local timer = love.timer
 
 local min = math.min
 local max = math.max
@@ -14,7 +15,7 @@ local floor = math.floor
 function Body.new(x, y, radius, gravity, color)
   if not Resource then
     Resource = require("game.bodies.Resource")
-  end  
+  end
 
   local p = setmetatable({}, Body)
   
@@ -24,6 +25,7 @@ function Body.new(x, y, radius, gravity, color)
   p.radius      = radius      or 100.0
   p.gravity     = gravity     or 9.81
   p.color       = color       or {0,0,0}
+  p.visible     = false
   
   p.resources   = {}
   p.statRings   = {}
@@ -63,14 +65,12 @@ end
 
 
 function Body:closeToOtherBody(bodies, minDist) 
-  local result = false
   for _,b in ipairs(bodies) do
     if self:surfaceDistance(b) < minDist then
-      result = true
-      break
+      return true
     end
   end
-  return result
+  return false
 end
 
 
@@ -85,7 +85,7 @@ end
 -- rgb of the status ring, and the time in seconds it will be visible and its radius
 function Body:setStatusRing(r,g,b,time, radius)
   radius = radius or self.radius
-  local ring = { r=r, g=g, b=b, time=time, radius=radius, initialRadius=radius }
+  local ring = { r=r, g=g, b=b, startTime=timer.getTime(), time=time, initialRadius=radius }
   table.insert(self.statRings, ring)
 end
 
@@ -104,7 +104,7 @@ end
 
 
 function Body:updateCircleSegments()
-  self.circleSegments = floor(self.radius/globals.config.currentZoom)
+  self.circleSegments = floor(self.radius/(globals.config.currentZoom*0.7))
   if self.circleSegments < 10 then
     self.circleSegments = 10
   elseif self.circleSegments > 500 then
@@ -114,22 +114,13 @@ end
 
 
 function Body:update(dt)
-  -- update draw segments
-  self:updateCircleSegments()
-  
+  self.visible = self:isInView(globals.camera)
   for _,res in ipairs(self.resources) do
     res:update(dt)
   end
-  
-  -- reverse iterate, so the remove does not break the iteration
-  for i=#self.statRings,1,-1 do
-    local ring = self.statRings[i]
-    local dist = (ring.initialRadius/ring.time) * dt
-    ring.radius = ring.radius - dist
-    if (ring.radius <= 0) then
-      table.remove(self.statRings,i)
-    end
-  end
+end
+
+function Body:draw()
 end
 
 
@@ -141,9 +132,18 @@ end
 
 
 function Body:drawStatRings()
-  for _,ring in ipairs(self.statRings) do
-    lg.setColor(ring.r,ring.g,ring.b,255*(ring.radius/self.radius))
-    lg.circle("fill", self.x, self.y, ring.radius, self.circleSegments)
+  local now = timer.getTime()
+  
+  -- reverse iterate, so the remove does not break the iteration
+  for i=#self.statRings,1,-1 do
+    local ring = self.statRings[i]
+    local ringRadius = ((now-ring.startTime-ring.time)/-ring.time) * ring.initialRadius
+    if (ringRadius <= 0) then
+      table.remove(self.statRings,i)
+    else
+      lg.setColor(ring.r,ring.g,ring.b,255*(ringRadius/self.radius))
+      lg.circle("fill", self.x, self.y, ringRadius, self.circleSegments)
+    end
   end
 end
 

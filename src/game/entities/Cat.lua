@@ -30,7 +30,16 @@ end
 
 
 function Cat:calcVisibility()
-  self.isVisible = image:getWidth()*scale/globals.config.currentZoom >= 2
+  local min, max = 2, 5
+  local size = image:getWidth()*scale/globals.config.currentZoom;
+  self.isVisible = size >= min
+  
+  if size > max then
+    self.alpha = 255
+  else
+    size = size - min
+    self.alpha = size <= 0 and 0 or (255 * (size/ (max-min)))
+  end
 end
 
 
@@ -42,7 +51,7 @@ end
 
 local lg = love.graphics
 function Cat:drawCustom()
-  lg.setColor(255,255,255)
+  lg.setColor(255,255,255, self.alpha)
   lg.draw(image, -imgOffsetX*scale, -self.planet.radius-imgHeight*scale, 0, scale)
 end
 

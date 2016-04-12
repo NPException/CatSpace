@@ -27,6 +27,9 @@ end
 
 local lg = love.graphics
 function Planet:draw()
+  if not self.visible then return end
+  -- update draw segments
+  self:updateCircleSegments()
   self:drawBody()
   self:drawResources()
   for _,e in ipairs(self.entities) do

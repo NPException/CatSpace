@@ -54,7 +54,7 @@ end
 
 
 function Resource:updateCircleSegments()
-  if not self.isVisible then return end
+  if not self.visible then return end
 
   local currentZoom = globals.config.currentZoom
   Body.updateCircleSegments(self, currentZoom)
@@ -79,7 +79,7 @@ function Resource:update(dt)
 --    return
 --  end
 
-  self.isVisible = self.radius*2 / globals.config.currentZoom > 1
+  self.visible = self.radius*2 / globals.config.currentZoom > 1
 
   Body.update(self, dt)
 end
@@ -87,7 +87,9 @@ end
 
 local lg = love.graphics
 function Resource:draw()
-  if not self.isVisible then return end
+  if not self.visible then return end
+  -- update draw segments
+  self:updateCircleSegments()
   self:drawBody()
   if not self:isEmpty() then
     lg.setColor(self.resColor)
