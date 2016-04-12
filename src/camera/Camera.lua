@@ -12,14 +12,14 @@ function Camera.new()
   return setmetatable({}, Camera)
 end
 
+local globals = GLOBALS
 local lg = love.graphics
-local lw = love.window
 
 function Camera:set()
   lg.push()
   lg.rotate(-self.rotation)
   lg.scale(1 / self.scale, 1 / self.scale)
-  lg.translate(-self.x + (lw.getWidth()/2)*self.scale, -self.y + (lw.getHeight()/2)*self.scale)
+  lg.translate(-self.x + (globals.window.width/2)*self.scale, -self.y + (globals.window.height/2)*self.scale)
 end
 
 function Camera:unset()

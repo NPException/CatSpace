@@ -11,11 +11,21 @@ local
 local state
 
 
+local function fetchWindowSize()
+  local width, height, flags = love.window.getMode()
+  globals.window.width = width
+  globals.window.height = height
+end
+
+
 -- LOAD --
 function love.load(arg)
   globals.debug = false
   globals.config = require("conf")
   globals.time = 0
+  
+  globals.window = {}
+  fetchWindowSize()
   
   love.graphics.setDefaultFilter("nearest","nearest")
   love.graphics.setBackgroundColor(0,100,150)
@@ -25,9 +35,11 @@ function love.load(arg)
 end
 
 -- KEYPRESSED --
-function love.keypressed(key)
+function love.keypressed( key, scancode, isrepeat )
   if (key == "kp+") then
     globals.debug = not globals.debug
+  elseif (scancode == "`") then
+    debug.debug()
   elseif (key == "escape") then
     love.event.quit()
   elseif (key == "return") then
@@ -47,6 +59,12 @@ function love.mousepressed( x, y, button )
   end
 end
 
+function love.wheelmoved( dx, dy )
+  if state.wheelmoved then
+    state.wheelmoved(dx, dy)
+  end
+end
+
 -- UPDATE --
 function love.update(dt)
   globals.time = globals.time + dt
@@ -60,6 +78,8 @@ end
 
 -- DRAW --
 function love.draw()
+  fetchWindowSize()
+  
   state.draw()
   
   if (globals.debug) then

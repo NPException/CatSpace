@@ -90,12 +90,11 @@ function Body:setStatusRing(r,g,b,time, radius)
 end
 
 
-local lw = love.window
 function Body:isInView(camera)
   local camX = camera.x
   local camY = camera.y
-  local camWHalf = lw.getWidth()*camera.scale*0.5
-  local camHHalf = lw.getHeight()*camera.scale*0.5
+  local camWHalf = globals.window.width*camera.scale*0.5
+  local camHHalf = globals.window.height*camera.scale*0.5
   -- okay Jezza, you won.
   return  (self.x + self.radius + 50) > (camX - camWHalf)
       and (self.x - self.radius - 50) < (camX + camWHalf)

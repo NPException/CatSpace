@@ -2,7 +2,7 @@ local globals = GLOBALS
 local Game = {}
 
 
-local lg, lw = love.graphics, love.window
+local lg = love.graphics
 
 local camera
 local camFocus
@@ -12,7 +12,6 @@ local WorldGen = require("game.worldgen.WorldGenerator")
 local universe
 local focusedPlanet
 
-
 local function toWorldCoordinates(winX, winY)
   local worldX = (winX-lg.getWidth()*0.5) * camera.scale + camera.x
   local worldY = (winY-lg.getHeight()*0.5) * camera.scale + camera.y
@@ -21,9 +20,9 @@ end
 
 
 local function updateCameraFocus(worldX, worldY, scale)
-  camFocus.scale = math.min(scale,(720*23)/love.window.getHeight())
+  camFocus.scale = math.min(scale, (720*23) / globals.window.width)
   local radius = focusedPlanet:isInView(camera) and focusedPlanet.radius or 20 -- 20 is the minimum planet radius
-  local minScale = (radius*2) / (love.window.getHeight()-100)
+  local minScale = (radius*2) / (globals.window.height-100)
   camFocus.scale = math.max(camFocus.scale, minScale)
 
   camFocus.x = worldX
@@ -32,7 +31,7 @@ end
 
 
 local function updateCameraFocusWithMouse(scale)
-  local scaleThreshold = 5*( (focusedPlanet.radius*2) / (love.window.getHeight()-100) )
+  local scaleThreshold = 5*( (focusedPlanet.radius*2) / (globals.window.height-100) )
   if scale < scaleThreshold and focusedPlanet:isInView(camera) then
     updateCameraFocus(focusedPlanet.x, focusedPlanet.y, scale)
     return
@@ -42,13 +41,13 @@ local function updateCameraFocusWithMouse(scale)
   
   local mouseWX, mouseWY = toWorldCoordinates(mouseX, mouseY)
 
-  camFocus.scale = math.min(scale,(720*23)/love.window.getHeight())
+  camFocus.scale = math.min(scale, (720*23) / globals.window.height)
   local radius = focusedPlanet:isInView(camera) and focusedPlanet.radius or 20 -- 20 is the minimum planet radius
-  local minScale = (radius*2) / (love.window.getHeight()-100)
+  local minScale = (radius*2) / (globals.window.height-100)
   camFocus.scale = math.max(camFocus.scale, minScale)
   
-  camFocus.x = mouseWX - (mouseX-lw.getWidth()*0.5) * camFocus.scale
-  camFocus.y = mouseWY - (mouseY-lw.getHeight()*0.5) * camFocus.scale
+  camFocus.x = mouseWX - (mouseX-globals.window.width*0.5) * camFocus.scale
+  camFocus.y = mouseWY - (mouseY-globals.window.height*0.5) * camFocus.scale
 end
 
 
@@ -127,17 +126,18 @@ function Game.mousepressed( x, y, button )
         table.insert(planet.entities, Cat.new(planet, pos, 1))
       end
     end
+  end
+end
 
-  elseif (button == "wu") then
+function Game.wheelmoved( dx, dy )
+  if dy > 0 then
     --updateCameraFocus(focusedPlanet.x,focusedPlanet.y, camFocus.scale*0.8)
     updateCameraFocusWithMouse(camFocus.scale*0.8)
-
-  elseif (button == "wd") then
+  elseif dy < 0 then
     --updateCameraFocus(focusedPlanet.x,focusedPlanet.y, camFocus.scale*1.2)
     updateCameraFocusWithMouse(camFocus.scale*1.2)
   end
 end
-
 
 ------------
 -- UPDATE --
@@ -172,7 +172,7 @@ end
 -------------
 local function drawDebugInfo()
   lg.setColor(0,0,0,150)
-  lg.rectangle("fill",0,50,200,lw.getHeight()-50)
+  lg.rectangle("fill",0,50,200,globals.window.height-50)
 
   local printY = 53
 
@@ -251,8 +251,7 @@ end
 
 
 function Game.draw()
-  lg.setBackgroundColor(0,150,200)
-  lg.clear()
+  lg.clear(0,150,200)
 
   camera:set()
   if focusedPlanet then
