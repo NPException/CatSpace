@@ -1,4 +1,5 @@
 -- global variables
+require("loop")
 GLOBALS = { debug = false }
 local globals = GLOBALS
 string.hash = require("lib.stringhash")

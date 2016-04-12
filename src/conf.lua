@@ -24,6 +24,7 @@ end
 
 
 local config = {
-  worldseed="This is NOT Sparta!!!"
+  worldseed = "This is NOT Sparta!!!",
+  limitFPS = true -- "Limits" the framerate. (this is merely a debugging option; max FPS is still above 600 if set to "true")
 }
 return config
